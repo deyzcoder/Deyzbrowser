@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DeyzBrowser — Табы</title>
+  <style>
+    body {
+      margin: 0; padding: 0; background-color: #0b0b14;
+      font-family: system-ui, -apple-system, sans-serif; color: #fff;
+      display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+    }
+    
+    .tabs-container {
+      background: #090912; padding: 6px 10px 0 10px;
+      display: flex; align-items: center; gap: 5px; overflow-x: auto;
+      border-bottom: 1px solid #232343;
+    }
+    .tab {
+      background: #14142b; border: 1px solid #2d2d54; border-bottom: none;
+      color: #9ca3af; padding: 6px 16px; font-size: 12px; border-radius: 8px 8px 0 0;
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      white-space: nowrap; transition: all 0.2s;
+    }
+    .tab.active-tab {
+      background: #1c1c3a; color: #c084fc; border-color: #8b5cf6;
+      box-shadow: 0 -2px 10px rgba(139, 92, 246, 0.2); font-weight: bold;
+    }
+    .close-tab-btn { color: #ef4444; font-weight: bold; cursor: pointer; margin-left: 5px; }
+
+    .header-container {
+      background: #121222; border-bottom: 3px solid #8b5cf6; padding: 10px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .browser-header { display: flex; align-items: center; gap: 10px; }
+    .nav-btn {
+      background: #1e1e38; border: 2px solid #3b3b68; color: #a78bfa;
+      border-radius: 50%; width: 44px; height: 44px; font-size: 20px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .address-bar {
+      flex: 1; background: #0d0d1a; border: 2px solid #3b3b68; border-radius: 22px;
+      padding: 10px 16px; color: #fff; font-size: 15px; outline: none;
+    }
+    .bookmarks-bar { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+    .bookmark-btn {
+      background: #191932; border: 2px solid #8b5cf6; color: #c084fc;
+      border-radius: 12px; padding: 10px 16px; font-size: 14px; cursor: pointer; white-space: nowrap;
+    }
+    
+    .browser-screen {
+      flex: 1; padding: 15px; box-sizing: border-box;
+      display: flex; justify-content: center; align-items: flex-start; overflow-y: auto;
+    }
+    .tab-content { display: none; width: 100%; height: 100%; justify-content: center; align-items: flex-start; }
+    .tab-content.active-content { display: flex; }
+
+    .welcome-card {
+      background: #131324; border: 2px solid #c084fc; border-radius: 16px;
+      padding: 20px; width: 100%; max-width: 400px; box-sizing: border-box; text-align: center;
+    }
+    .click-btn {
+      background: linear-gradient(135deg, #8b5cf6, #d946ef); border: none;
+      color: white; font-size: 16px; padding: 14px; border-radius: 10px; margin-top: 10px; cursor: pointer; width: 100%;
+    }
+    .google-btn {
+      background: #1e1e38; border: 1px solid #3b3b68; color: #9ca3af;
+      font-size: 13px; padding: 10px 16px; border-radius: 6px; margin: 10px 4px 0 4px; cursor: pointer;
+    }
+    .ai-input {
+      width: 100%; background: #0d0d1a; border: 2px solid #3b3b68; border-radius: 10px;
+      padding: 12px; color: #fff; box-sizing: border-box; outline: none; margin-top: 10px; font-size: 16px;
+    }
+    .ai-box { background: #1e1e38; border: 1px solid #8b5cf6; border-radius: 12px; padding: 12px; margin-top: 15px; text-align: left; }
+    .chat-history { max-height: 160px; overflow-y: auto; margin-bottom: 10px; padding-right: 5px; }
+    .dots::after { content: '.'; animation: loading-dots 1.5s infinite steps(4); }
+    @keyframes loading-dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+    
+    .horror-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background-color: #000; z-index: 100000; display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+    }
+    .horror-eye-img {
+      width: 90vw; height: auto; max-width: 500px; border-radius: 10px;
+      box-shadow: 0 0 30px #ff0000; animation: glitch 0.04s infinite alternate;
+    }
+    .horror-text {
+      color: #ff0000; font-family: 'Courier New', monospace; font-size: 32px;
+      font-weight: bold; text-align: center; margin-top: 25px; text-shadow: 0 0 15px #ff0000;
+      letter-spacing: 2px; animation: glitch 0.08s infinite alternate;
+    }
+    @keyframes glitch {
+      0% { transform: translate(2px, 2px) rotate(0deg); }
+      100% { transform: translate(-2px, -2px) rotate(1deg); }
+    }
+    .g-blue { color: #4285F4; } .g-red { color: #EA4335; }
+    .g-yellow { color: #FBBC05; } .g-green { color: #34A853; }
+  </style>
+</head>
+<body>
+  <div class="horror-overlay" id="screamer">
+    <img src="images/eye.jpg" alt="ГЛАЗ" class="horror-eye-img">
+    <div class="horror-text">Ведь я и есть создатель...</div>
+  </div>
+
+  <div class="tabs-container" id="tabs-header"></div>
+
+  <div class="header-container">
+    <div class="browser-header">
+      <button class="nav-btn" onclick="createNewTab()">🏠</button>
+      <button class="nav-btn" onclick="handleRefresh()">🔄</button>
+      <input type="text" class="address-bar" id="main-address" placeholder="Поиск в Google или команда...">
+    </div>
+    <div class="bookmarks-bar">
+      <button class="bookmark-btn" onclick="switchApp('weather')">🌤 Погода</button>
+      <button class="bookmark-btn" onclick="switchApp('clicker')">🎮 Кликер</button>
+      <button class="bookmark-btn" onclick="switchApp('generator')">🎲 Генератор</button>
+    </div>
+  </div>
+
+  <div class="browser-screen" id="browser-viewport"></div>
+  <script>
+    const tabsHeader = document.getElementById('tabs-header');
+    const viewport = document.getElementById('browser-viewport');
+    const addressBar = document.getElementById('main-address');
+    
+    let coins = 0;
+    let tabs = []; 
+    let activeTabId = null;
+
+    function createNewTab(title = 'Google', type = 'google') {
+      const tabId = 'tab-' + Date.now();
+      tabs.push({ id: tabId, title: title, type: type });
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'tab-content';
+      contentDiv.id = 'content-' + tabId;
+      
+      if (type === 'google') {
+        contentDiv.innerHTML = `
+          <div class="welcome-card" style="max-width: 450px;">
+            <h1 style="font-size: 50px; font-weight: bold; margin: 10px 0 20px 0; letter-spacing: -2px;">
+              <span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span>
+            </h1>
+            <input type="text" class="ai-input" id="input-${tabId}" placeholder="Введите поисковый запрос...">
+            <div>
+              <button class="google-btn" onclick="triggerTabSearch('${tabId}')">Поиск в Google</button>
+            </div>
+            <p style="color: #6b7280; font-size: 11px; margin-top: 15px;">DeyzTabs Engine v3.0</p>
+          </div>
+        `;
+      }
+      viewport.appendChild(contentDiv);
+      
+      const inp = document.getElementById(`input-${tabId}`);
+      if (inp) {
+        inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') triggerTabSearch(tabId); });
+      }
+      switchTab(tabId);
+    }
+
+    // Склеиваем ссылку и открываем открытый веб-поиск без блокировок!
+    function triggerTabSearch(tabId) {
+      const inp = document.getElementById(`input-${tabId}`);
+      if (!inp || inp.value.trim() === '') return;
+      
+      let query = inp.value.trim();
+      let questionLower = query.toLowerCase();
+
+      // Хоррор-скример
+      if (questionLower.includes('у тебя нет создателя') || questionLower.includes('нет создателя')) {
+        const screamer = document.getElementById('screamer');
+        screamer.style.display = 'flex';
+        screamer.onclick = function() { screamer.style.display = 'none'; switchTab(tabId); };
+        inp.value = '';
+        return;
+      }
+
+      if (questionLower.startsWith('ии ') || questionLower.startsWith('бот ')) {
+        openAIEngine(tabId, query);
+        inp.value = '';
+        return;
+      }
+
+      // Используем специальный прокси-поисковик Bing Mobile, который РАЗРЕШЕН во фреймах
+      let searchUrl = 'https://bing.com' + encodeURIComponent(query) + '&setmkt=ru-RU&setlang=ru-RU';
+      
+      const contentDiv = document.getElementById('content-' + tabId);
+      const tabObj = tabs.find(t => t.id === tabId);
+      
+      if (tabObj) {
+        tabObj.title = query;
+        tabObj.type = 'search';
+        renderTabsHeader();
+      }
+
+      addressBar.value = query;
+      // Вставляем полноценный рабочий поиск на экран, который точно загрузится!
+      contentDiv.innerHTML = `<iframe src="${searchUrl}" style="width:100%; height:100%; border:3px solid #8b5cf6; background:#fff; border-radius:12px; box-sizing:border-box;"></iframe>`;
+    }
+
+    function openAIEngine(tabId, firstQuestion) {
+      const contentDiv = document.getElementById('content-' + tabId);
+      const tabObj = tabs.find(t => t.id === tabId);
+      if (tabObj) { tabObj.title = 'Чат ИИ'; tabObj.type = 'ai'; renderTabsHeader(); }
+
+      contentDiv.innerHTML = `
+        <div class="welcome-card">
+          <h1 style="margin:0 0 10px 0; color:#c084fc;">Deyzex AI Чат 🤖</h1>
+          <div class="ai-box">
+            <div class="chat-history" id="chat-viewport-${tabId}"></div>
+            <input type="text" class="ai-input" id="ai-input-${tabId}" placeholder="Напиши вопрос...">
+            <button class="click-btn" onclick="sendToSpecificAI('${tabId}')">Спросить ИИ</button>
+          </div>
+        </div>
+      `;
+      document.getElementById(`ai-input-${tabId}`).addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') sendToSpecificAI(tabId);
+      });
+      sendToSpecificAI(tabId, firstQuestion);
+    }
+
+    function sendToSpecificAI(tabId, forcedQuery) {
+      const chatViewport = document.getElementById(`chat-viewport-${tabId}`);
+      const qInput = document.getElementById(`ai-input-${tabId}`);
+      let userQuestion = forcedQuery || (qInput ? qInput.value : '');
+      if (!userQuestion || userQuestion.trim() === '') return;
+      if (qInput) qInput.value = '';
+
+      const tempId = 'thinking-' + Date.now();
+      chatViewport.innerHTML += `<p style="font-size:14px; margin:10px 0 0 0; border-top:1px solid #3b3b68; padding-top:10px;"><b>Вы:</b> ${userQuestion}</p><p id="${tempId}" style="font-size:14px; margin:5px 0 0 0; color:#a78bfa;"><b style="color:#c084fc;">🤖 ИИ:</b> <span class="dots">Думает</span></p>`;
+      chatViewport.scrollTop = chatViewport.scrollHeight;
+
+      setTimeout(() => {
+        let ans = "Привет! Я на связи. 😎";
+        const replyBlock = document.getElementById(tempId);
+        if (replyBlock) replyBlock.innerHTML = `<b style="color:#c084fc;">🤖 ИИ:</b> ${ans}`;
+        chatViewport.scrollTop = chatViewport.scrollHeight;
+      }, 1200);
+    }
+
+    function switchApp(appType) {
+      if (!activeTabId) return;
+      const contentDiv = document.getElementById('content-' + activeTabId);
+      const tabObj = tabs.find(t => t.id === activeTabId);
+      if (!contentDiv || !tabObj) return;
+      tabObj.type = appType;
+
+      if (appType === 'weather') {
+        tabObj.title = '🌤 Погода'; addressBar.value = 'deyzcoder.github.io/weather-app';
+        contentDiv.innerHTML = `<iframe src="https://github.io" style="width:100%; height:100%; border:3px solid #8b5cf6; background:#fff; border-radius:12px; box-sizing:border-box;"></iframe>`;
+      } else if (appType === 'clicker') {
+        tabObj.title = '🎮 Кликер'; addressBar.value = 'deyz://apps/clicker';
+        contentDiv.innerHTML = `<div class="welcome-card"><h2>Вайб Кликер Монет 💰</h2><h1 id="coin-counter" style="font-size:48px; color:#f59e0b; margin:15px 0;">${coins}</h1><button class="click-btn" onclick="addCoin()">КЛИК! +1</button></div>`;
+      } else if (appType === 'generator') {
+        tabObj.title = '🎲 Генератор'; addressBar.value = 'deyz://apps/generator';
+        contentDiv.innerHTML = `<div class="welcome-card"><h2>Генератор Чисел 🎲</h2><h1 id="rand-num" style="font-size:54px; color:#10b981; margin:15px 0;">50</h1><button class="click-btn" style="background:linear-gradient(135deg, #10b981, #3b82f6);" onclick="rerollTabNumber()">Генерировать</button></div>`;
+      }
+      renderTabsHeader();
+    }
+
+    function addCoin() { coins++; const c = document.getElementById('coin-counter'); if (c) c.innerText = coins; }
+    function rerollTabNumber() { const r = document.getElementById('rand-num'); if (r) r.innerText = Math.floor(Math.random() * 100) + 1; }
+
+    function switchTab(tabId) {
+      activeTabId = tabId;
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active-content'));
+      const activeContent = document.getElementById('content-' + tabId);
+      if (activeContent) activeContent.classList.add('active-content');
+      renderTabsHeader();
+    }
+
+    function closeTab(tabId, event) {
+      event.stopPropagation();
+      tabs = tabs.filter(t => t.id !== tabId);
+      const content = document.getElementById('content-' + tabId);
+      if (content) content.remove();
+      if (activeTabId === tabId) {
+        if (tabs.length > 0) switchTab(tabs[tabs.length - 1].id); else createNewTab();
+      } else { renderTabsHeader(); }
+    }
+
+    // Обновленный рендер вкладок
+    function renderTabsHeader() {
+      tabsHeader.innerHTML = '';
+      tabs.forEach(t => {
+        const isActive = t.id === activeTabId ? 'active-tab' : '';
+        tabsHeader.innerHTML += `<div class="tab ${isActive}" onclick="switchTab('${t.id}')"><span>${t.title}</span><span class="close-tab-btn" onclick="closeTab('${t.id}', event)">×</span></div>`;
+      });
+      tabsHeader.innerHTML += `<div class="tab" onclick="createNewTab('Google', 'google')" style="font-weight:bold; color:#8b5cf6; padding: 6px 12px;">+</div>`;
+    }
+
+    function handleSearch(query) {
+      if (activeTabId) {
+        const inp = document.getElementById(`input-${activeTabId}`);
+        if (inp) { inp.value = query; triggerTabSearch(activeTabId); }
+      }
+    }
+
+    addressBar.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') { handleSearch(addressBar.value); addressBar.blur(); }
+    });
+
+    createNewTab('Google', 'google');
+  </script>
+</body>
+</html>
+
